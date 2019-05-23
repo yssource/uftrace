@@ -159,7 +159,6 @@ static int find_dynamic_module(struct dl_phdr_info *info, size_t sz, void *data)
 	/* TODO: support dynamic tracing for libraries */
 	if (name[0] == '\0') {
 		mdi = xzalloc(sizeof(*mdi));
-		mdi->mod_name = xstrdup(read_exename());
 		mdi->base_addr = 0;
 
 		for (i = 0; i < info->dlpi_phnum; i++) {
@@ -187,8 +186,7 @@ static int find_dynamic_module(struct dl_phdr_info *info, size_t sz, void *data)
 
 		map = find_map(symtabs, mdi->base_addr);
 		if (map && map->mod) {
-			mdi->sym_base = map->start;
-			mdi->nr_symbols = map->mod->symtab.nr_sym;
+			mdi->map = map;
 			mcount_arch_find_module(mdi, &map->mod->symtab);
 		}
 
@@ -307,7 +305,6 @@ static void finish_dynamic_update(struct mcount_disasm_engine *disasm)
 		tmp = mdi->next;
 
 		mcount_cleanup_trampoline(mdi);
-		free(mdi->mod_name);
 		free(mdi);
 
 		mdi = tmp;
